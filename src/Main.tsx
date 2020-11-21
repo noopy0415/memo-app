@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { FlatList } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { loadAll } from "./Store";
-
+import { List, FAB, Text } from 'react-native-paper';
+import moment from "moment";
 export function Main() {
 
 // const memos = [
@@ -45,15 +46,28 @@ export function Main() {
   return (
     <View style={styles.container}>
       <FlatList
-        data={memos}                                      // 表示するオブジェクト
-        renderItem={(item)=>(                             // オブジェクトから1つずつ受け取った値を
-          <Text>{item.item.text}</Text>                   // 表示
+        data={memos}
+        renderItem={(item)=>(
+          <Text style={styles.item}>{item.item.text}</Text>
+          // <List.Item
+          //   title={item.text}
+          //   titleNumberOfLines={5}
+          //   description={`作成日時：${moment(item.createdAt).format(
+          //     "yyyy-MM-DD ddd HH:mm"
+          //   )}`}
+          //   // descriptionStyle={styles.description}
+          // />
         )}
-        keyExtractor={(item, index) => index.toString()}
       />
-      <Button
+      {/* <Button
         onPress={toCompose}
         title="toCompose"
+      /> */}
+      <FAB
+        // icon
+        style={styles.addButton}
+        icon="pencil"
+        onPress={toCompose}
       />
       <StatusBar style="auto" />
     </View>
@@ -66,5 +80,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  item: {
+    flex:1,
+    minWidth: "100%",
+    flexDirection: "column",
+    borderWidth:1,
+    borderColor: "#ddd",
+    padding: 10,
+  },
+  addButton: {
+    position: "absolute",
+    right: 16,
+    bottom: 16,
   },
 });
