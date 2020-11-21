@@ -200,64 +200,47 @@ const styles = StyleSheet.create({
 `Main.tsx`
 
 ```tsx
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-// react navigation ライブラリ
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import "react-native-gesture-handler";
-
-// Screens
-import { Main } from "./src/Main";
-import { Compose } from "./src/Compose";
-
-const Stack = createStackNavigator();
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name='Main'
-          component={Main}
-        />
-        <Stack.Screen
-          name='Compose'
-          component={Compose}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-  )
-}
-```
-
-入力画面
-
-`Compose`
-
-```tsx
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import { FlatList } from 'react-native-gesture-handler';
 
-export function Compose() {
+const notes = [
+  {
+    text: "これがメモの内容だよ",
+    createdAt: new Date(),
+  },
+  {
+    text: "2つ目のメモだよ",
+    createdAt: "1585574700000",
+  },
+  {
+    text:
+      "３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ",
+    createdAt: "1234567890123",
+  },
+];
+
+export function Main() {
   const navigation = useNavigation();
-
-  const toBack = () => {
-    navigation.goBack();
+  
+  const toCompose = () => {
+    navigation.navigate("Compose")
   }
+
   return (
     <View style={styles.container}>
-      <TextInput
-        placeholder="test"
-        multiline
+      <FlatList
+        data={notes}
+        renderItem={(note)=>(
+          <Text>{note.item.text}</Text>
+        )}
+        keyExtore
       />
       <Button
-        onPress={toBack}
-        title="戻る"
+        onPress={toCompose}
+        title="toCompose"
       />
       <StatusBar style="auto" />
     </View>
@@ -273,6 +256,8 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+入力画面
 
 入力した値を保存して出力する
 
@@ -293,6 +278,10 @@ export function Compose() {
     navigation.goBack();
   }
 
+  const onSave = () => {
+    console.log("text : " + text);
+  }
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -301,7 +290,7 @@ export function Compose() {
         onChangeText={(text) => setText(text)}
       />
       <Button                             // 追加
-        onPress={()=>{console.log(text)}} // 追加
+        onPress={()=>{onSave}}            // 追加
         title="保存"                       // 追加
       />                                  {/* 追加 */}
       <Button
@@ -321,3 +310,208 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+```
+
+保存処理
+
+ライブラリをインストール
+
+```shell
+$ yarn add react-native-storage
+$ yarn add @react-native-community/async-storage
+```
+
+`Store.ts`
+
+```ts
+// ストレージの初期化
+const storage = new Storage({
+  size: 1000,
+  storageBackend: AsyncStorage,
+  defaultExpires: 1000 * 3600 * 24, //milliseconds 24時間
+  enableCache: true,
+});
+// 保存処理
+export const save = (text: string, createdAt: string) => {
+  // 保存する時のキー データを読み取る時の合言葉
+  const key = "memo";
+  storage.save({
+    key: key,           // データの合言葉 keyでアンダースコア（"_"）を使用しないでください
+    id: createdAt,      // これがないと常に上書きになってしまう。
+    data: {
+      text: text,
+      createdAt: createdAt,
+    },
+  });
+  alert("保存されました");
+};
+```
+
+`Compose.tsx`
+
+```tsx
+import { useNavigation } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
+import { save } from "./Store";                   //追加
+
+export function Compose() {
+  const navigation = useNavigation();
+  const [text, setText] = React.useState("");
+
+  const toBack = () => {
+    navigation.goBack();
+  }
+
+  const onSave = () => {
+    // Date型からString型へ変更
+    save(text, String(Date.now()));               //追加
+    navigation.goBack();                          //追加
+  }
+
+  return (
+    <View style={styles.container}>
+      <TextInput
+        placeholder="メモしたいことを入力してください。"
+        multiline
+        onChangeText={(text) => setText(text)}
+      />
+      <Button
+        onPress={onSave}
+        title="保存"
+      />
+      <Button
+        onPress={toBack}
+        title="戻る"
+      />
+      <StatusBar style="auto" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+```
+
+読み込み処理
+
+`Store.ts`
+
+```ts
+import Storage from 'react-native-storage';
+import AsyncStorage from '@react-native-community/async-storage';
+
+// ストレージの初期化
+const storage = new Storage({
+  size: 1000,
+  storageBackend: AsyncStorage,
+  defaultExpires: 1000 * 3600 * 24, //milliseconds 24時間
+  enableCache: true,
+});
+
+export const save = (text: string, createdAt: string) => {
+  const key = "memo";
+  storage.save({
+    key: key,           // データの合言葉 keyでアンダースコア（"_"）を使用しないでください
+    id: createdAt,      // これがないと常に上書きになってしまう。
+    data: {
+      text: text,
+      createdAt: createdAt,
+    },
+  });
+  alert("保存されました");
+};
+
+// 追加
+export const loadAll = async () => {
+  const key = "memo";
+  const memos = await storage.getAllDataForKey(key);
+  return memos;
+};
+```
+
+`Main.tsx`
+
+```tsx
+import React, { useEffect, useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { FlatList } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
+import { loadAll } from "./Store";
+
+export function Main() {
+
+// テストデータは不要なのでコメントアウト
+// const memos = [
+//   {
+//     text: "これがメモの内容だよ",
+//     createdAt: `new Date()`,
+//   },
+//   {
+//     text: "2つ目のメモだよ",
+//     createdAt: "1585574700000",
+//   },
+//   {
+//     text:
+//       "３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ３つ目のメモだよ",
+//     createdAt: "1234567890123",
+//   },
+// ];
+
+  const navigation = useNavigation();
+  const [memos, setMemos] = useState([]);         // 追加
+  
+  // useEffectは最初にページが読み込まれた時に呼び出される
+  useEffect(() => {
+    // asyncで非同期で読み込み
+    const initialize = async () => {
+      // awaitで読み込みが終わるまで待機
+      const newMemos = await loadAll();
+      setMemos(newMemos);
+    };
+    // 画面が戻ってきた時に動作するようにnavigationの動作に追加
+    navigation.addListener("focus", initialize);
+  })
+  
+  const toCompose = () => {
+    navigation.navigate("Compose")
+  }
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={memos}                                      // 表示するオブジェクト
+        renderItem={(item)=>(                             // オブジェクトから1つずつ受け取った値を
+          <Text>{item.item.text}</Text>                   // 表示
+        )}
+        keyExtractor={(item, index) => index.toString()}
+      />
+      <Button
+        onPress={toCompose}
+        title="toCompose"
+      />
+      <StatusBar style="auto" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+```
+
+ここから見た目修正

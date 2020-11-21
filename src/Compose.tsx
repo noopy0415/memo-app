@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
+import { save } from "./Store";
 
 export function Compose() {
   const navigation = useNavigation();
@@ -12,17 +13,20 @@ export function Compose() {
     navigation.goBack();
   }
 
+  const onSave = () => {
+    save(text, `${Date.now()}`);
+    navigation.goBack();
+  }
+
   return (
     <View style={styles.container}>
       <TextInput
-        // mode="outlined"
         placeholder="メモしたいことを入力してください。"
         multiline
         onChangeText={(text) => setText(text)}
       />
       <Button
-        // mode="contained"
-        onPress={()=>{console.log(text)}}
+        onPress={onSave}
         title="保存"
       />
       <Button
