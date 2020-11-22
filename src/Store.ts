@@ -9,11 +9,11 @@ const storage = new Storage({
   enableCache: true,
 });
 
-export const save = (text: string, createdAt: string) => {
+export const save = (text: string, createdAt: number) => {
   const key = "memo";
   storage.save({
     key: key,           // データの合言葉 keyでアンダースコア（"_"）を使用しないでください
-    id: createdAt,      // これがないと常に上書きになってしまう。
+    id: `${createdAt}`,      // これがないと常に上書きになってしまう。
     data: {
       text: text,
       createdAt: createdAt,
@@ -24,7 +24,7 @@ export const save = (text: string, createdAt: string) => {
 
 export const loadAll = async () => {
   const key = "memo";
-  const memos = await storage.getAllDataForKey(key);
+  const memos = await storage.getAllDataForKey<Memo>(key);
   return memos;
 };
 

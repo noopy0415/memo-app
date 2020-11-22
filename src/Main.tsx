@@ -8,7 +8,7 @@ import { List, FAB, Text } from 'react-native-paper';
 import moment from "moment";
 export function Main() {
 
-// const memos = [
+// const memos:Memo[] = [
 //   {
 //     text: "これがメモの内容だよ",
 //     createdAt: `new Date()`,
@@ -25,7 +25,7 @@ export function Main() {
 // ];
 
   const navigation = useNavigation();
-  const [memos, setMemos] = useState([]);
+  const [memos, setMemos] = useState<Memo[]>([]);
   
   // useEffectは最初にページが読み込まれた時に呼び出される
   useEffect(() => {
@@ -47,17 +47,18 @@ export function Main() {
     <View style={styles.container}>
       <FlatList
         data={memos}
-        renderItem={(item)=>(
-          <Text style={styles.item}>{item.item.text}</Text>
-          // <List.Item
-          //   title={item.text}
-          //   titleNumberOfLines={5}
-          //   description={`作成日時：${moment(item.createdAt).format(
-          //     "yyyy-MM-DD ddd HH:mm"
-          //   )}`}
-          //   // descriptionStyle={styles.description}
-          // />
-        )}
+        renderItem={({item})=>(
+          // <Text style={styles.item}>{item.text}</Text>
+          <List.Item
+            title={item.text}
+            titleNumberOfLines={5}
+            description={`
+              作成日時：${item.createdAt}
+            `}
+            // descriptionStyle={styles.description}
+          />
+          )}
+        keyExtractor={(item) => `${item.createdAt}`}
       />
       {/* <Button
         onPress={toCompose}

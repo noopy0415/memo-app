@@ -15,7 +15,7 @@ export function Compose() {
   }
 
   const onSave = () => {
-    save(text, `${Date.now()}`);
+    save(text, Date.now());
     navigation.goBack();
   }
 
